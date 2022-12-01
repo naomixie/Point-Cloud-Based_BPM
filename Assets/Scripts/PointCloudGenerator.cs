@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace PointCloud
@@ -11,13 +8,39 @@ namespace PointCloud
         public string AssetDirectory;
         public string AssetName;
 
-        void Start ()
+        private MeshData tempMesh = null;
+
+        public GameObject prefab;
+
+        private static PointCloudGenerator instance;
+
+        private PointCloudGenerator ()
         {
-            PointCloudImporter.Instance.Load(AssetDirectory + AssetName);
         }
 
-        void Update ()
+        public static PointCloudGenerator Instance
         {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = new PointCloudGenerator();
+                }
+                return instance;
+            }
+        }
+
+        void Start ()
+        {
+            tempMesh = PointCloudImporter.Instance.Load(AssetDirectory + AssetName);
+        }
+
+        public void renderMeshData ()
+        {
+            for (int i = 0 ; i < tempMesh.vertexCount ; i++)
+            {
+                Instantiate(prefab, tempMesh.vertices[i], Quaternion.identity);
+            }
         }
     }
 }
