@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
+using UnityEditor.VersionControl;
 using UnityEngine;
 
 namespace PointCloud
@@ -22,66 +24,76 @@ namespace PointCloud
             }
         }
 
-        public MeshData Load (string filePath, int maximumVertex = 65000)
+        public MeshData Load (List<AssetInfo> assets, int maximumVertex = 65000)
         {
             MeshData meshData = new MeshData();
-            if (File.Exists(filePath))
+            foreach (AssetInfo asset in assets)
             {
-                string[] lines = File.ReadAllLines(filePath);
-                bool inHeader = true;
-                int vertexCount = 0;
-                foreach (string line in lines)
+                string filePath = asset.AssetDirectory + asset.AssetName;
+                int assetVertices = 0;
+
+                if (File.Exists(filePath))
                 {
-                    if (inHeader)
+                    // Reading the header
+                    string[] lines = File.ReadAllLines(filePath);
+                    bool inHeader = true;
+                    int vertexCount = 0;
+                    foreach (string line in lines)
                     {
-                        /* Reading object information */
-                        if (line.StartsWith("obj_info"))
+                        if (inHeader)
                         {
-                            // TODO: consider other object information
-                            string[] info_str = line.Split(" ");
-                        }
-                        /* Read element */
-                        else if (line.StartsWith("element"))
-                        {
-                            string[] info_str = line.Split(" ");
-                            switch (info_str[1])
+                            /* Reading object information */
+                            if (line.StartsWith("obj_info"))
                             {
-                                case "vertex":
-                                    meshData.vertexCount = int.Parse(info_str[2]);
-                                    meshData.vertices = new Vector3[meshData.vertexCount];
-                                    break;
-                                default:
-                                    break;
+                                // TODO: consider other object information
+                                string[] info_str = line.Split(" ");
                             }
-                        }
-                        else if (line.StartsWith("property"))
-                        {
-                            // TODO: consider properties
-                            string[] info_str = line.Split(" ");
-                        }
-                        else if (line == "end_header")
-                        {
-                            inHeader = false;
-                        }
-                    }
-                    else
-                    {
-                        if (vertexCount < meshData.vertexCount)
-                        {
-                            string[] info_str = line.Split(' ');
-                            meshData.vertices[vertexCount] = new Vector3(float.Parse(info_str[0]), float.Parse(info_str[1]), float.Parse(info_str[2]));
-                            vertexCount++;
+                            /* Read element */
+                            else if (line.StartsWith("element"))
+                            {
+                                string[] info_str = line.Split(" ");
+                                switch (info_str[1])
+                                {
+                                    case "vertex":
+                                        assetVertices = int.Parse(info_str[2]);
+                                        //meshData.vertices = new Vector3[meshData.vertexCount];
+                                        Debug.Log(filePath + "\t" + assetVertices);
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            else if (line.StartsWith("property"))
+                            {
+                                // TODO: consider properties
+                                string[] info_str = line.Split(" ");
+                            }
+                            else if (line == "end_header")
+                            {
+                                inHeader = false;
+                            }
                         }
                         else
                         {
-                            // TODO: consider other variables
-                            return meshData;
+                            if (vertexCount < assetVertices)
+                            {
+                                string[] info_str = line.Split(' ');
+                                meshData.vertices.Add(new Vector3(float.Parse(info_str[0]) * 100, float.Parse(info_str[1]) * 100, float.Parse(info_str[2]) * 100));
+                                meshData.normals.Add(new Vector3(float.Parse(info_str[3]), float.Parse(info_str[4]), float.Parse(info_str[5])));
+                                vertexCount++;
+                            }
+                            else
+                            {
+                                // TODO: consider other variables
+                                break;
+                            }
                         }
+
                     }
-                    
                 }
             }
             return meshData;
-        }        
+        }
+
     }
 }

@@ -1,16 +1,29 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace PointCloud
 {
+    [System.Serializable]
+    public struct AssetInfo
+    {
+        public string AssetDirectory;
+        public string AssetName;
+        [HideInInspector]
+        public string filePath;
+        [HideInInspector]
+        public int endHeaderLine;
+    }
+
     public class PointCloudGenerator : MonoBehaviour
     {
         [Header("Point Cloud Import")]
-        public string AssetDirectory;
-        public string AssetName;
+        public List<AssetInfo> AssetInfos = new List<AssetInfo>();
 
         private MeshData tempMesh = null;
 
         public GameObject prefab;
+
+        public GameObject GenerateParent;
 
         private static PointCloudGenerator instance;
 
@@ -32,14 +45,14 @@ namespace PointCloud
 
         void Start ()
         {
-            tempMesh = PointCloudImporter.Instance.Load(AssetDirectory + AssetName);
+            tempMesh = PointCloudImporter.Instance.Load(AssetInfos);
         }
 
         public void renderMeshData ()
         {
-            for (int i = 0 ; i < tempMesh.vertexCount ; i++)
+            for (int i = 0 ; i < tempMesh.vertices.Count ; i++)
             {
-                Instantiate(prefab, tempMesh.vertices[i], Quaternion.identity);
+                Instantiate(prefab, tempMesh.vertices[i], Quaternion.identity, GenerateParent.transform);
             }
         }
     }
