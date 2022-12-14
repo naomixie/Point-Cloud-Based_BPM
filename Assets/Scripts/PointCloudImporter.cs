@@ -78,9 +78,28 @@ namespace PointCloud
                             if (vertexCount < assetVertices)
                             {
                                 string[] info_str = line.Split(' ');
-                                meshData.vertices.Add(new Vector3(float.Parse(info_str[0]) * 100, float.Parse(info_str[1]) * 100, float.Parse(info_str[2]) * 100));
-                                meshData.normals.Add(new Vector3(float.Parse(info_str[3]), float.Parse(info_str[4]), float.Parse(info_str[5])));
+                                PointData data = new PointData();
+                                data.index = vertexCount;
+                                data.position = new Vector3(float.Parse(info_str[0]) * 100, float.Parse(info_str[1]) * 100, float.Parse(info_str[2]) * 100);
+                                data.normal = new Vector3(float.Parse(info_str[3]), float.Parse(info_str[4]), float.Parse(info_str[5]));
+                                meshData.points.Add(data);
                                 vertexCount++;
+
+
+                                // Get the bounds of the mesh
+                                if (float.Parse(info_str[0]) * 100 > meshData.maxx)
+                                    meshData.maxx = float.Parse(info_str[0]) * 100;
+                                if (float.Parse(info_str[1]) * 100 > meshData.maxy)
+                                    meshData.maxy = float.Parse(info_str[1]) * 100;
+                                if (float.Parse(info_str[2]) * 100 > meshData.maxz)
+                                    meshData.maxz = float.Parse(info_str[2]) * 100;
+
+                                if (float.Parse(info_str[0]) * 100 < meshData.minx)
+                                    meshData.minx = float.Parse(info_str[0]) * 100;
+                                if (float.Parse(info_str[1]) * 100 < meshData.miny)
+                                    meshData.miny = float.Parse(info_str[1]) * 100;
+                                if (float.Parse(info_str[2]) * 100 < meshData.minz)
+                                    meshData.minz = float.Parse(info_str[2]) * 100;
                             }
                             else
                             {
