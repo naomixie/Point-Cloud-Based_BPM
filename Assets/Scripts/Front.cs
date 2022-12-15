@@ -37,6 +37,11 @@ namespace PointCloud
     {
         public List<Edge> edges = new List<Edge>();
 
-
+        public Edge getActiveEdge ()
+        {
+            foreach (Edge e in edges)
+                if (e.status == EdgeStatus.active) return e;
+            return null;
+        }
     }
 }

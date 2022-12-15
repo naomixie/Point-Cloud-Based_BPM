@@ -70,10 +70,6 @@ namespace PointCloud
 
         private static PointCloudGenerator instance;
 
-        private PointCloudGenerator ()
-        {
-        }
-
         public static PointCloudGenerator Instance
         {
             get
@@ -160,7 +156,7 @@ namespace PointCloud
         }
 
 
-        private void findSeedTriangle ()
+        private bool findSeedTriangle ()
         {
             // For each vertex in each voxel
             for (int i = 0 ; i < voxelsSize.x ; ++i)
@@ -218,12 +214,13 @@ namespace PointCloud
                                     {
                                         outputTriangle(po, f, s, ballCentre);
                                         // Stop when a valid seed triangle has been found
-                                        return;
+                                        return true;
                                     }
                                 }
                             }
                         }
                     }
+            return false;
         }
 
         private void outputTriangle (PointData first, PointData second, PointData third, Vector3 ballCenter)
@@ -250,10 +247,6 @@ namespace PointCloud
             front.edges.Add(c);
         }
 
-        private void insertEdge (PointData start, PointData end, PointData opps, Vector3 ballCenter, Edge prev, Edge next, EdgeStatus status)
-        {
-
-        }
 
         private void join ()
         {
@@ -282,7 +275,31 @@ namespace PointCloud
 
         private void BPA ()
         {
-            findSeedTriangle();
+            while (true)
+            {
+                Edge edge = front.getActiveEdge();
+                while (edge != null)
+                {
+                    Vector3 midPoint = (edge.StartPoint.position + edge.EndPoint.position) / 2;
+                    Vector3 ballCentre = getBallCentre(edge.StartPoint, edge.EndPoint, edge.OppsPoint, 1.0f, getTriangleNormal(edge.StartPoint, edge.EndPoint, edge.OppsPoint));
+                    float trajectoryRadius = Vector3.Distance(midPoint, ballCentre);
+                    
+                    Vector3Int voxelIndex = findVoxelOffset(midPoint, tempMesh, 2.0f);
+                    for (int a = voxelIndex.x > 0 ? voxelIndex.x - 1 : 0 ; a < (voxelIndex.x < voxelsSize.x - 1 ? voxelIndex.x + 1 : voxelsSize.x - 1) ; ++a)
+                        for (int b = voxelIndex.y > 0 ? voxelIndex.y - 1 : 0 ; b < (voxelIndex.y < voxelsSize.y - 1 ? voxelIndex.y + 1 : voxelsSize.y - 1) ; ++b)
+                            for (int c = voxelIndex.z > 0 ? voxelIndex.z - 1 : 0 ; c < (voxelIndex.z < voxelsSize.z - 1 ? voxelIndex.z + 1 : voxelsSize.z - 1) ; ++c)
+                                foreach (PointData data in voxels[a, b, c])
+                                {
+                                }
+                }
+
+                if (!findSeedTriangle())
+                {
+                    break;
+                }
+
+            }
+
         }
 
 
@@ -315,21 +332,14 @@ namespace PointCloud
             for (int a = i > 0 ? i - 1 : 0 ; a < (i < voxelsSize.x - 1 ? i + 1 : voxelsSize.x - 1) ; ++a)
                 for (int b = j > 0 ? j - 1 : 0 ; b < (j < voxelsSize.y - 1 ? j + 1 : voxelsSize.y - 1) ; ++b)
                     for (int c = k > 0 ? k - 1 : 0 ; c < (k < voxelsSize.z - 1 ? k + 1 : voxelsSize.z - 1) ; ++c)
-                    {
                         foreach (PointData data in voxels[a, b, c])
                         {
                             // Skip selected vertices
                             if (data == p || data == f || data == s)
                                 continue;
                             if (Vector3.Distance(data.position, ballCentre) <= radius)
-                            {
-                                Debug.Log("CD! Collided with voxel " + a + b + c + "'s point: " + data.position);
                                 return true;
-                            }
                         }
-
-                    }
-
             return false;
         }
     }
